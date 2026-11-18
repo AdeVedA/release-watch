@@ -1,0 +1,29 @@
+[project]
+name = "release-watch"
+version = "0.1.0"
+description = "Interface graphique locale qui surveille les releases des dépôts GitHub choisis : bandeaux par dépôt, deux colonnes de versions, filtres de tags et d'assets, version locale désignée à la main."
+readme = "readme.md"
+license = "MIT"
+authors = [{ name = "AdeVedA" }]
+requires-python = ">=3.13"
+dependencies = [
+    # pyside6-essentials et non le métapaquet pyside6 : le panier tire pyside6-addons,
+    # pyside6-pdf et pyside6-webengine. QtWebEngine et QtPdf sont sous GPL (pas LGPL) et
+    # embarquent les DLL ffmpeg (avcodec/avformat/avutil). L'application n'importe que
+    # QtCore, QtGui et QtWidgets : rien de GPL ne doit se retrouver dans un livrable.
+    "pyside6-essentials>=6.12.0",
+    "requests>=2.34.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = ["-ra", "-q", "--import-mode=importlib", "-m", "not render"]
+markers = [
+    "render: controles de rendu (captures PNG), volontairement hors de la course par defaut",
+]

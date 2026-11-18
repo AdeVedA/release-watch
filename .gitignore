@@ -1,0 +1,36 @@
+.pytest_cache/
+__pycache__/
+.venv/
+.ruff_cache/
+env
+.env
+.vscode
+data/
+# Aide au développement (captures, sondes) — non versionné.
+AGENTS.md
+dist/
+build/
+*.spec
+tests/test_render.py
+.stylelintignore
+.prettierignore
+# Outillage (diagnostic et captures) : gardé en local, jamais publié.
+tools/api_probe.py
+tools/captures_diff.py
+tools/row_probe.py
+tools/startup_probe.py
+tools/toolbar_probe.py
+# Textes de licence tiers regéneré par tools/export_licenses.py (embarques dans le .exe).
+licenses/
+# Autres
+todolist.md
+*copy*
+*copie*
+Archives
+*.bat
+*.ps1
+bin
+session-*.md
+capture_ui.py
+capture_ui.ts
+screenshots/

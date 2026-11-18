@@ -1,0 +1,46 @@
+name: "Demande d'évolution"
+description: "Ce que l'application ne fait pas, et que tu aimerais qu'elle fasse"
+title: "[évolution] "
+labels:
+  - "enhancement"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Décris d'abord la **gêne à l'écran**, pas l'implémentation : quelle ligne, quel bouton, ce que tu voulais faire et ce qui t'a bloqué. Les choix d'interface sont discutés à partir de là.
+  - type: textarea
+    id: gene
+    attributes:
+      label: Ce que je veux faire, et où ça coince
+      placeholder: "Je veux comparer deux dépôts côte à côte ; chaque bandeau est indépendant et je dois relire les deux titres."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: "À quoi ça ressemblerait"
+      description: "Une phrase sur l'endroit concerné de l'interface suffit (« dans la ligne de tête du bandeau, à côté de Fetch… »)."
+    validations:
+      required: true
+  - type: textarea
+    id: alternative
+    attributes:
+      label: "Comment je m'en sors aujourd'hui"
+      description: "Ce que tu fais à la main en attendant, ou ce que tu as renoncé à faire."
+  - type: checkboxes
+    id: limites
+    attributes:
+      label: "Je sais que le projet refuse volontairement certaines choses"
+      description: "Coche ce qui s'applique : ce n'est pas une réponse négative, ça évite juste de repasser la même discussion."
+      options:
+        - label: "L'application ne regarde jamais ce qui est installé sur la machine : la version locale est une valeur saisie."
+          required: false
+        - label: "Elle n'installe et n'exécute jamais un asset téléchargé."
+          required: false
+        - label: "Elle ne gère pas de jeton GitHub, donc pas de dépôts privés ni de quota relevé."
+          required: false
+  - type: input
+    id: version
+    attributes:
+      label: "Version utilisée (titre de la fenêtre)"
+      placeholder: "ReleaseWatch 0.1.0 — moniteur de releases GitHub"

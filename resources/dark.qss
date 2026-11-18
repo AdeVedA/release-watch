@@ -1,0 +1,1171 @@
+/* dark.qss
+   TEMPLATE : chaque valeur est un token (string.Template) resolu depuis app/palette.py.
+   Ne jamais ecrire de couleur ni de dimension en dur ici.
+   Les objectName sont une interface : ils servent aussi a findChild().
+   Syntaxe de substitution unique : dollar + nom de token.
+*/
+
+QWidget {
+    color: $fg_text;
+    font-family: $font_family;
+    font-size: $fs_md;
+}
+
+QMainWindow#mainWindow {
+    background: $bg_window;
+}
+
+QDialog {
+    background: $bg_panel;
+}
+
+QWidget#bannersHost {
+    background: $bg_window;
+}
+
+QScrollArea#centralScroll {
+    background: $bg_window;
+    border: none;
+}
+
+/* ---------------- barre d'outils ---------------- */
+
+QToolBar#mainToolBar {
+    background: $bg_panel;
+    border: none;
+    border-bottom: $border_w solid $border;
+    padding: $pad_sm $pad_md;
+    spacing: $pad_md;
+}
+
+QToolBar#mainToolBar::separator {
+    width: $border_w;
+    background: $border;
+    margin: $pad_sm $pad_sm;
+}
+
+/* Spaceurs qui encadrent le logo : regles identiques a gauche et a droite = logo centre. */
+QWidget#toolGap {
+    background: transparent;
+    border: none;
+}
+
+/* Le logo prend la hauteur des boutons : il ne peut pas agrandir la barre. */
+QLabel#toolLogo {
+    background: transparent;
+    border: none;
+    padding: 0px;
+    margin: 0px;
+}
+
+QToolButton#btnAddRepo,
+QToolButton#btnCheckAll,
+QToolButton#btnCheckExcluded,
+QToolButton#btnSettings,
+QToolButton#btnLanguage,
+QToolButton#btnReloadTheme {
+    background: $bg_banner;
+    color: $fg_text;
+    border: $border_w solid $border;
+    border-radius: $radius_m;
+    padding: 2px 3px;
+    margin: 1px 9px;
+}
+
+QToolButton#btnAddRepo[role="accent"] {
+    background: $accent;
+    color: $fg_on_accent;
+    border-color: $accent;
+    font-weight: 600;
+}
+
+QToolButton#btnCheckAll[role="accent"],
+QToolButton#btnCheckExcluded[role="accent"] {
+    background: $accent;
+    color: $fg_on_accent;
+    border-color: $accent;
+    font-weight: 600;
+}
+
+QToolButton#btnAddRepo:hover,
+QToolButton#btnCheckAll:hover,
+QToolButton#btnCheckExcluded:hover,
+QToolButton#btnSettings:hover,
+QToolButton#btnLanguage:hover,
+QToolButton#btnReloadTheme:hover {
+    background: $accent_hover;
+    color: $fg_on_accent;
+    border-color: $accent_hover;
+}
+
+QToolButton:pressed {
+    background: $bg_selected;
+}
+
+QToolButton:disabled,
+QPushButton:disabled {
+    color: $fg_disabled;
+    background: $bg_disabled;
+    border-color: $border;
+}
+
+QLabel#lblRepoCount {
+    color: $fg_dim;
+    background: $bg_badge;
+    border-radius: $radius_s;
+    font-size: $fs_sm;
+    padding: $pad_xs $pad_sm;
+}
+
+/* ---------------- bandeau repo ---------------- */
+
+QFrame#repoBanner {
+    background: $bg_banner;
+    border: $border_w solid $border_banner;
+    border-left: $banner_edge_w solid $unknown;
+    border-radius: $radius_l;
+    padding: $pad_banner_v $pad_banner_h;
+}
+
+QFrame#repoBanner[status="ok"] {
+    border-left: $banner_edge_w solid $ok;
+}
+
+QFrame#repoBanner[status="new"] {
+    border-left: $banner_edge_w solid $new;
+}
+
+QFrame#repoBanner[status="ahead"] {
+    border-left: $banner_edge_w solid $ahead;
+}
+
+QFrame#repoBanner[status="unknown"] {
+    border-left: $banner_edge_w solid $unknown;
+}
+
+QFrame#repoBanner[status="err"] {
+    border-left: $banner_edge_w solid $err;
+}
+
+/* Feedback drag : le bandeau qui se deplace et la barre d'insertion. */
+QFrame#repoBanner[dragging="1"] {
+    border-color: $accent;
+}
+
+QWidget#dragInsertBar {
+    background: $accent;
+    border: none;
+    border-radius: $radius_s;
+}
+
+QLabel#bannerTitle {
+    color: $fg_title;
+    font-size: $fs_xl;
+    font-weight: 700;
+    /* Le titre ne se compresset pas : il s'arrete la et le libelle des versions cede la place. */
+    max-width: $w_title_max;
+}
+
+/* Cran de taille pose par RepoBanner._fit_title_font : le nom reste entier, ecrit plus petit. */
+QLabel#bannerTitle[fsize="lg"] {
+    font-size: $fs_title_lg;
+}
+
+QLabel#bannerTitle[fsize="md"] {
+    font-size: $fs_title_md;
+}
+
+QLabel#bannerStatus {
+    font-size: $fs_sm;
+    font-weight: 700;
+    padding: $pad_xs $pad_sm;
+    border-radius: $radius_s;
+}
+
+QLabel#bannerStatus[status="ok"] {
+    color: $ok;
+    background: $ok_soft;
+}
+
+QLabel#bannerStatus[status="new"] {
+    color: $new;
+    background: $new_soft;
+}
+
+QLabel#bannerStatus[status="ahead"] {
+    color: $ahead;
+    background: $ahead_soft;
+}
+
+QLabel#bannerStatus[status="unknown"] {
+    color: $unknown;
+    background: $unknown_soft;
+}
+
+QLabel#bannerStatus[status="err"] {
+    color: $err;
+    background: $err_soft;
+}
+
+QLabel#lblLocalVersion {
+    color: $fg_dim;
+    font-size: $fs_md;
+}
+
+QLabel#lblLocalVersion[status="ok"] {
+    color: $ok;
+}
+
+QLabel#lblLocalVersion[status="new"] {
+    color: $new;
+}
+
+QLabel#lblLocalVersion[status="ahead"] {
+    color: $ahead;
+}
+
+QLabel#lblLocalVersion[status="err"] {
+    color: $err;
+}
+
+QLabel#lblHint {
+    color: $fg_muted;
+    font-size: $fs_xs;
+}
+
+QToolButton#bannerToggle {
+    background: transparent;
+    border: none;
+    color: $fg_dim;
+    font-size: $fs_lg;
+    padding: $pad_xs -3px $pad_xs -6px;
+}
+
+QToolButton#bannerToggle:hover {
+    color: $fg_title;
+}
+
+/* Lignes de reglages : visibles seulement quand le bandeau est deploye.
+   Le trait du bas est dessine ici ; les espaces verticaux des elements ne peuvent PAS venir
+   d'ici, ils sont poses par les layouts des lignes en Python (tokens cites pour l'audit :
+   $row_pad_v au-dessus des elements des deux lignes, $filters_gap_v sous les champs de la
+   ligne filtres ; les deux boutons de colonne sont colles au trait du bas, reserve 0). */
+QWidget#bannerHead,
+QWidget#bannerInfo,
+QWidget#bannerAssets,
+QWidget#bannerFilters {
+    background: transparent;
+}
+
+QWidget#bannerAssets,
+QWidget#bannerFilters {
+    border-top: $border_w solid $border_banner;
+}
+
+QWidget#bannerFilters {
+    border-bottom: $border_w solid $fg_dim;
+}
+
+/* ---------------- champs de filtrage ---------------- */
+
+/* Une seule regle pour les quatre champs, largeur imposee des deux cotes : les boites
+   « a garder » et « sauf » des lignes tags et assets doivent etre exactement superposees.
+   Des min-width litteraux differents (100px ici, 110px pour editTagPattern) decalesaient la
+   deuxieme colonne d'une ligne a l'autre. max = $w_filter_field : le champ ne suit ni le texte
+   ni le surplus de la ligne, c'est l'espaceur fixe du layout qui place le groupe. Le plancher,
+   plus bas, ne sert qu'au minimum du layout : sans lui le bandeau ne pourrait plus retrecir. */
+QLineEdit#editTagPattern,
+QLineEdit#editTagExclude,
+QLineEdit#editAssetInclude,
+QLineEdit#editAssetExclude {
+    background: $bg_input;
+    color: $fg_text;
+    border: $border_w solid $border;
+    border-radius: $radius_s;
+    padding: $pad_xs $pad_sm;
+    min-width: $w_filter_field_min;
+    max-width: $w_filter_field;
+}
+
+QCheckBox#chkAssets {
+    color: $fg_dim;
+    spacing: $pad_sm;
+}
+
+QCheckBox#chkAssets::indicator {
+    width: 12px;
+    height: 12px;
+    border: $border_w solid $border;
+    border-radius: $radius_s;
+    background: $bg_input;
+}
+
+QCheckBox#chkAssets::indicator:checked {
+    background: $accent;
+    border-color: $accent;
+}
+
+QCheckBox#chkAssets:disabled {
+    color: $fg_disabled;
+}
+
+QLabel#lblAssetInfo {
+    color: $fg_muted;
+    font-size: $fs_xs;
+    background: transparent;
+}
+
+/* ---------------- boutons d'action du bandeau ---------------- */
+
+QPushButton#btnFetch {
+    background: $bg_banner_alt;
+    border: $border_w solid $border;
+    border-radius: $radius_m;
+    padding: $pad_xs $pad_sm;
+}
+
+QPushButton#btnOpenGithub {
+    background: $bg_banner_alt;
+    color: $fg_link;
+    border: $border_w solid $border;
+    border-radius: $radius_m;
+    padding: $pad_xs $pad_sm;
+}
+
+QPushButton#btnLaunch {
+    background: $bg_banner_alt;
+    color: $fg_title;
+    border: $border_w solid $border;
+    border-radius: $radius_m;
+    padding: $pad_xs $pad_sm;
+}
+
+QPushButton#btnLaunch[role="accent"] {
+    background: $accent;
+    color: $fg_on_accent;
+    border-color: $accent;
+    font-weight: 600;
+}
+
+/* Apres les regles #id : a specificite egale, l'ordre de source gagne,
+   sinon un bouton desactive garde sa couleur d'actif. */
+QPushButton#btnLaunch:disabled,
+QPushButton#btnLaunch[role="accent"]:disabled,
+QPushButton#btnFetch:disabled,
+QPushButton#btnOpenGithub:disabled,
+QPushButton#btnAsset:disabled,
+QToolButton#btnValidate:disabled {
+    background: $bg_disabled;
+    color: $fg_disabled;
+    border-color: $border;
+}
+
+QToolButton#btnPickScript,
+QToolButton#btnDragOrder,
+QToolButton#btnMore,
+QToolButton#btnDownloadDir,
+QToolButton#btnExcludeCheckAll {
+    background: transparent;
+    color: $fg_dim;
+    border: $border_w solid $border;
+    border-radius: $radius_m;
+    padding: $pad_xs $pad_xs;
+}
+
+QToolButton#btnPickScript:hover,
+QToolButton#btnDragOrder:hover,
+QToolButton#btnMore:hover,
+QToolButton#btnDownloadDir:hover,
+QToolButton#btnExcludeCheckAll:hover {
+    background: $bg_hover;
+    color: $fg_title;
+    border-color: $border_strong;
+}
+
+QToolButton#btnDragOrder {
+    font-weight: 700;
+}
+
+/* ⊘ enfonce quand le repo est exclu du controle global : l'etat se voit sans libelle. */
+QToolButton#btnExcludeCheckAll:checked {
+    background: $err_soft;
+    color: $err;
+    border-color: $err;
+}
+
+QToolButton#btnMore[role="danger"]:hover {
+    color: $err;
+    border-color: $err;
+}
+
+/* Segments « Fetch + ⊘ » et « Script + 🛠 » : une paire, une boite. Le conteneur (#grpFetch,
+   #grpScript) ne peint rien du tout, chaque moitie garde son fond et ses etats. Le joint est le
+   bord gauche du segment de droite : la moitie gauche perd donc son bord droit, et les rayons ne
+   restent qu'aux deux bouts exterior. Un `border-color` (hover, coche, desactive) ne remplace pas
+   un `border-right: none` : le joint ne peut pas se rouvrir. */
+QPushButton#btnFetch,
+QPushButton#btnLaunch {
+    border-right: none;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+
+QToolButton#btnExcludeCheckAll,
+QToolButton#btnPickScript {
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+}
+
+QComboBox#cmbMaxVersions,
+QComboBox#cmbMaxRejectedVersions,
+QComboBox#cmbDefaultAsset {
+    background: $bg_input;
+    color: $fg_text;
+    border: $border_w solid $border;
+    border-radius: $radius_s;
+    padding: $pad_xs $pad_sm;
+    min-width: 22px;
+}
+
+QComboBox#cmbDefaultAsset {
+    /* La boite se dimensionne sur son contenu (AdjustToContents en Python) : plancher pour
+       qu'elle reste cliquable, plafond pour que le groupe centre ne saute pas a la ligne. */
+    min-width: 90px;
+    max-width: $w_asset_combo_max;
+}
+
+QComboBox#cmbDefaultAsset:disabled {
+    color: $fg_disabled;
+    background: $bg_disabled;
+}
+
+/* Aucun plancher de largeur : l'intitule prend exactement sa largeur de texte, la seule place
+   entre l'intitule et sa boite est l'ecart du layout. Les deux lignes de reglages portent les
+   memes intitules, leurs groupes ont donc deja la meme largeur naturelle. */
+QLabel#bannerCaption {
+    color: $fg_muted;
+    font-size: $fs_xs;
+}
+
+QComboBox:hover {
+    border-color: $border_strong;
+}
+
+QComboBox:focus,
+QLineEdit:focus {
+    border-color: $border_focus;
+}
+/* Toggles des colonnes : de vrais boutons. La boite (fond + bordure) est dessinee
+   dans les deux etats ; seul le rendu change selon que la colonne est affichee. */
+QToolButton#btnColLeft,
+QToolButton#btnColRight {
+    background: $bg_input;
+    border: $border_w solid $border;
+    border-bottom: none;
+    border-radius: $radius_s;
+    border-bottom-left-radius: 0px; 
+    border-bottom-right-radius: 0px;
+    color: $fg_disabled;
+    font-size: $fs_xs;
+    padding: $pad_xs $pad_sm 0px $pad_sm;
+}
+
+QToolButton#btnColLeft:hover,
+QToolButton#btnColRight:hover {
+    background: $bg_banner_alt;
+    border-color: $fg_dim;
+    color: $fg_title;
+}
+
+QToolButton#btnColLeft[on="1"],
+QToolButton#btnColRight[on="1"] {
+    background: $bg_button;
+    border-color: $fg_dim;
+    color: $fg_button_title;
+    font-weight: 600;
+}
+
+QToolButton#btnColLeft[on="1"]:hover,
+QToolButton#btnColRight[on="1"]:hover {
+    background: $bg_hover;
+    border-color: $fg_title;
+    color: $fg_title;
+}
+/* ---------------- panneau des versions : deux colonnes ---------------- */
+
+QWidget#versionsPanel {
+    background: $bg_banner_alt;
+    border: $border_w solid $border_banner;
+    border-radius: $radius_m;
+}
+
+QWidget#versionColumn {
+    background: transparent;
+}
+
+/* Colonne de droite : tags rejetes ou obsolètes, séparée par une fine barre verticale. */
+QWidget#versionColumn[side="right"] {
+    border-left: $border_w solid $fg_dim;
+    padding-left: -5px;
+}
+
+/* Colonnes empilees (bandeau etroit) : la séparation devient horizontale. */
+QWidget#versionColumn[side="right"][stacked="1"] {
+    border-left: none;
+    border-top: $border_w solid $border_banner;
+}
+
+
+/* Colonne affichee : fond plus clair, bordure claire, texte vif et gras.
+   L'etat est porte par la propriete dynamique [on="1"] et non par :checked : sur ce
+   PySide6, :checked ne change rien au rendu d'un QToolButton (verifie par sonde).
+   La propriete est posee par theme.set_property(), qui re-poli le bouton. */
+
+
+QWidget#colBody {
+    background: transparent;
+}
+
+QFrame#releaseRow {
+    background: transparent;
+    border: none;
+    border-bottom: $border_w solid $border_banner;
+    border-radius: $radius_s;
+    min-height: $row_h_release;
+    padding: $pad_xs $pad_xs;
+    margin-left: $pad_sm;
+}
+
+/* La ligne cliquee prend le focus : c'est elle qui recoit les fleches haut/bas. */
+QFrame#releaseRow:focus {
+    background: $bg_selected;
+}
+
+/* Plafond des textes : la largeur reelle est calculee par colonne en Python depuis
+   $row_w_version et $row_w_meta. Pas de max-width/min-width ici : le QSS est reapplique
+   au rechargement du theme et ecraserait les largeurs alignees des releases. */
+QLabel#rowVersion {
+    color: $fg_title;
+    font-size: $fs_md;
+    font-weight: 600;
+}
+
+QLabel#rowMeta {
+    color: $fg_muted;
+    font-size: $fs_xs;
+}
+
+/* Le role de la ligne est dit par la couleur du nom, plus par un badge texte :
+   jaune = derniere autorisee, vert = derniere ET locale, cyan = locale designee. */
+QFrame#releaseRow[kind="latest"] QLabel#rowVersion {
+    color: $new;
+}
+
+QFrame#releaseRow[kind="latest_local"] QLabel#rowVersion {
+    color: $ok;
+}
+
+QFrame#releaseRow[kind="local"] QLabel#rowVersion {
+    color: $ahead;
+}
+
+QFrame#releaseRow[kind="stale"] QLabel#rowVersion,
+QFrame#releaseRow[kind="other"] QLabel#rowVersion {
+    color: $fg_muted;
+    font-weight: 400;
+}
+
+/* Pre-release : le nom passe en italique, la mention texte disparait. */
+QFrame#releaseRow[pre="1"] QLabel#rowVersion {
+    font-style: italic;
+}
+
+QToolButton#btnValidate {
+    background: transparent;
+    color: $fg_dim;
+    border: $border_w solid $border;
+    border-radius: $radius_s;
+    padding: 0 $pad_xs;
+    min-width: $row_w_validate;
+    max-width: $row_w_validate;
+    min-height: $row_h_action;
+}
+
+QToolButton#btnValidate[role="accent"] {
+    color: $ok;
+    border-color: $ok;
+}
+
+QToolButton#btnValidate:hover {
+    background: $bg_hover;
+    color: $ok;
+    border-color: $ok;
+}
+
+QPushButton#btnAsset {
+    background: transparent;
+    color: $fg_dim;
+    border: $border_w solid $border;
+    border-radius: $radius_s;
+    padding: 0 $pad_xs;
+    min-width: $row_w_asset;
+    max-width: $row_w_asset;
+    min-height: $row_h_action;
+}
+
+QPushButton#btnAsset:hover {
+    background: $bg_hover;
+    color: $fg_title;
+    border-color: $border_strong;
+}
+
+/* Tag refuse par le filtre du bandeau : telechargeable, mais en pointilles. */
+QFrame#releaseRow[matches="0"] QPushButton#btnAsset {
+    border-style: dashed;
+}
+
+/* 📂 : ouvre le dossier d'un asset deja ecrit. Meme boite que ⤓ (même token de largeur) pour que
+   la colonne des boutons de ligne reste alignee quand le bouton apparait. */
+QPushButton#btnOpenFolder {
+    background: transparent;
+    color: $fg_dim;
+    border: $border_w solid $border;
+    border-radius: $radius_s;
+    padding: 0 $pad_xs;
+    min-width: $row_w_asset;
+    max-width: $row_w_asset;
+    min-height: $row_h_action;
+}
+
+QPushButton#btnOpenFolder:hover {
+    background: $bg_hover;
+    color: $fg_title;
+    border-color: $border_strong;
+}
+
+/* ---------------- panneau lateral notes ---------------- */
+
+QDockWidget#dockNotes {
+    color: $fg_title;
+    background: $bg_dock;
+    font-size: $fs_sm;
+    min-width: $w_dock_notes_min;
+    max-width: $w_dock_notes_max;
+}
+
+QDockWidget#dockNotes::title {
+    color: $fg_title;
+    background: $bg_panel;
+    border-bottom: $border_w solid $border;
+    padding: $pad_sm $pad_md;
+    font-size: $fs_sm;
+    font-weight: 700;
+}
+
+QDockWidget#dockNotes::close-button,
+QDockWidget#dockNotes::float-button {
+    subcontrol-position: top right;
+    background: transparent;
+    border: $border_w solid $border;
+    border-radius: $radius_s;
+    color: $fg_dim;
+    padding: $pad_xs $pad_xs;
+}
+
+QDockWidget#dockNotes::close-button:hover,
+QDockWidget#dockNotes::float-button:hover {
+    background: $bg_hover;
+    color: $fg_title;
+}
+
+QDockWidget#dockNotes::close-button:pressed,
+QDockWidget#dockNotes::float-button:pressed {
+    background: $bg_selected;
+    color: $fg_title;
+}
+
+QWidget#notesTitleBar {
+    background: $bg_panel;
+    border-bottom: $border_w solid $border;
+    padding: $pad_sm $pad_md;
+}
+
+QLabel#notesTitleLabel {
+    color: $fg_link;
+    font-size: $fs_sm;
+    font-weight: 700;
+    min-width: 0px;
+}
+
+QToolButton#btnDockNotesFloat,
+QToolButton#btnDockNotesClose {
+    background: transparent;
+    border: $border_w solid $border;
+    border-radius: $radius_s;
+    color: $fg_dim;
+    font-size: $fs_md;
+    min-width: 20px;
+    padding: $pad_xs $pad_xs;
+}
+
+QToolButton#btnDockNotesFloat:hover,
+QToolButton#btnDockNotesClose:hover {
+    background: $bg_hover;
+    color: $fg_title;
+    border-color: $border_strong;
+}
+
+QToolButton#btnDockNotesFloat:pressed,
+QToolButton#btnDockNotesClose:pressed {
+    background: $bg_selected;
+    color: $fg_title;
+}
+
+QToolButton#btnDockNotesClose:hover {
+    border-color: $err;
+    color: $err;
+}
+
+QWidget#notesHost {
+    background: $bg_dock;
+    border: $border_w solid $border;
+    max-width: $w_dock_notes_max;
+}
+
+/* Faits de tete sur la meme ligne que le titre : plus de liste de lignes. */
+QWidget#notesHeader {
+    background: $bg_panel;
+    border-bottom: $border_w solid $border;
+    padding: $pad_sm $pad_md;
+}
+
+QLabel#lblNotesTitle {
+    color: $fg_title2;
+    font-size: $fs_lg;
+    font-weight: 700;
+    min-width: 0px;
+}
+
+QLabel#chipNotes {
+    color: $fg_dim;
+    background: $bg_badge;
+    border: $border_w solid $border;
+    border-radius: $radius_s;
+    font-size: $fs_xs;
+    padding: $pad_xs $pad_sm;
+}
+
+QLabel#chipNotesSource {
+    color: $fg_muted;
+    font-size: $fs_xs;
+    font-style: italic;
+    padding: $pad_xs $pad_sm;
+}
+
+QLabel#chipNotesPre {
+    color: $new;
+    background: $new_soft;
+    border-radius: $radius_s;
+    font-size: $fs_xs;
+    font-style: italic;
+    padding: $pad_xs $pad_sm;
+}
+
+/* Taille de police du panneau : un seul mecanisme, le QSS. Le QSS gagne sur
+   setFontPointSize(), donc aucun cran n'est pose en Python : Ctrl+molette pose
+   seulement la propriete fsize, et c'est la regle [fsize=...] qui donne les px. */
+QTextBrowser#txtNotes {
+    background: $bg_dock;
+    color: $fg_text;
+    border: none;
+    padding: $pad_md;
+    font-size: $fs_notes_13;
+    selection-background-color: $bg_selection;
+}
+
+QTextBrowser#txtNotesSection {
+    background: $bg_dock;
+    color: $fg_dim;
+    border: none;
+    border-top: $border_w dashed $border;
+    padding: $pad_sm $pad_md;
+    font-size: $fs_notes_13;
+    selection-background-color: $bg_selection;
+}
+
+QTextBrowser#txtNotes[fsize="12"],
+QTextBrowser#txtNotesSection[fsize="12"] {
+    font-size: $fs_notes_12;
+}
+
+QTextBrowser#txtNotes[fsize="13"],
+QTextBrowser#txtNotesSection[fsize="13"] {
+    font-size: $fs_notes_13;
+}
+
+QTextBrowser#txtNotes[fsize="14"],
+QTextBrowser#txtNotesSection[fsize="14"] {
+    font-size: $fs_notes_14;
+}
+
+QTextBrowser#txtNotes[fsize="15"],
+QTextBrowser#txtNotesSection[fsize="15"] {
+    font-size: $fs_notes_15;
+}
+
+QTextBrowser#txtNotes[fsize="16"],
+QTextBrowser#txtNotesSection[fsize="16"] {
+    font-size: $fs_notes_16;
+}
+
+QTextBrowser#txtNotes[fsize="17"],
+QTextBrowser#txtNotesSection[fsize="17"] {
+    font-size: $fs_notes_17;
+}
+
+QTextBrowser#txtNotes[fsize="18"],
+QTextBrowser#txtNotesSection[fsize="18"] {
+    font-size: $fs_notes_18;
+}
+
+QTextBrowser#txtNotes a,
+QTextBrowser#txtNotesSection a {
+    color: $fg_link;
+}
+
+/* Sections depliables du panneau de notes : bouton pleine largeur, libelle a gauche.
+   QPushButton et non QToolButton : le QToolButton ignore text-align (verifie par mesure
+   de rendu : texte a x=401 sur 580px, en left comme en right) et centre son texte.
+   La pleine largeur est posee en Python (politique Expanding). */
+QPushButton#secAssetsToggle,
+QPushButton#secContribToggle {
+    background: $bg_panel;
+    color: $fg_dim;
+    border: none;
+    border-top: $border_w solid $border;
+    border-radius: 0px;
+    padding: $pad_sm $pad_md;
+    text-align: left;
+}
+
+QPushButton#secAssetsToggle:hover,
+QPushButton#secContribToggle:hover {
+    background: $bg_hover;
+    color: $fg_title;
+}
+
+QPushButton#secAssetsToggle:checked,
+QPushButton#secContribToggle:checked {
+    color: $fg_link;
+}
+
+QPushButton#secAssetsToggle:disabled,
+QPushButton#secContribToggle:disabled {
+    color: $fg_disabled;
+    background: $bg_panel;
+}
+
+/* ---------------- barre d'etat ---------------- */
+
+QStatusBar#statusBar {
+    background: $bg_panel;
+    border-top: $border_w solid $border;
+    color: $fg_dim;
+    font-size: $fs_sm;
+}
+
+QLabel#statusLabel {
+    font-size: $fs_sm;
+    padding: $pad_xs $pad_sm;
+    border-radius: $radius_s;
+    color: $fg_dim;
+}
+
+QLabel#statusLabel[status="ok"] {
+    color: $ok;
+}
+
+QLabel#statusLabel[status="new"] {
+    color: $new;
+}
+
+QLabel#statusLabel[status="ahead"] {
+    color: $ahead;
+}
+
+QLabel#statusLabel[status="err"] {
+    color: $err;
+}
+
+QLabel#statusLabel[status="unknown"] {
+    color: $fg_dim;
+}
+
+/* Effacement du message : masque seulement quand la barre porte un message. */
+QToolButton#btnClearStatus {
+    background: transparent;
+    border: $border_w solid $border;
+    border-radius: $radius_s;
+    color: $fg_dim;
+    min-height: $row_h_action;
+    padding: 0px $pad_sm;
+}
+
+QToolButton#btnClearStatus:hover {
+    background: $bg_banner_alt;
+    border-color: $border;
+    color: $fg_title;
+}
+
+QProgressBar#progressAll {
+    background: $bg_input;
+    border: $border_w solid $border;
+    border-radius: $radius_s;
+    color: $fg_text;
+    max-width: 150px;
+    min-height: 8px;
+    text-align: center;
+    font-size: $fs_xs;
+}
+
+QProgressBar#progressAll::chunk {
+    background: $accent;
+    border-radius: $radius_s;
+}
+
+/* ---------------- dialogues ---------------- */
+
+QLabel#dlgTitle {
+    color: $fg_title;
+    font-size: $fs_lg;
+    font-weight: 700;
+}
+
+QLabel#dlgHint {
+    color: $fg_muted;
+    font-size: $fs_xs;
+}
+
+QLabel#dlgError {
+    color: $err;
+    font-size: $fs_sm;
+    font-weight: 600;
+}
+
+QLabel#dlgFieldLabel {
+    color: $fg_dim;
+    font-size: $fs_sm;
+    font-weight: 600;
+}
+
+QLineEdit {
+    background: $bg_input;
+    color: $fg_text;
+    border: $border_w solid $border;
+    border-radius: $radius_s;
+    padding: $pad_sm $pad_sm;
+    selection-background-color: $bg_selection;
+}
+
+QSpinBox {
+    background: $bg_input;
+    color: $fg_text;
+    border: $border_w solid $border;
+    border-radius: $radius_s;
+    padding: $pad_sm $pad_sm;
+}
+
+/* Regle de classe et non par `#id` : un combo sans regle rend le fond natif, donc blanc, et le
+   nombre choisi devient illegible. Les combos du bandeau ont deja leurs regles `#id` plus
+   specifiques (largeurs), celles-ci ne servent que de plancher pour tout combo nouveau. */
+QComboBox {
+    background: $bg_input;
+    color: $fg_text;
+    border: $border_w solid $border;
+    border-radius: $radius_s;
+    padding: $pad_sm $pad_sm;
+}
+
+QPushButton#btnOk {
+    background: $accent;
+    color: $fg_on_accent;
+    border: $border_w solid $accent;
+    border-radius: $radius_m;
+    padding: $pad_sm $pad_lg;
+    font-weight: 700;
+}
+
+QPushButton#btnOk:hover {
+    background: $accent_hover;
+    border-color: $accent_hover;
+}
+
+QPushButton#btnCancel,
+QPushButton[role="ghost"] {
+    background: transparent;
+    color: $fg_dim;
+    border: $border_w solid $border;
+    border-radius: $radius_m;
+    padding: $pad_sm $pad_md;
+}
+
+QPushButton#btnCancel:hover,
+QPushButton[role="ghost"]:hover {
+    background: $bg_hover;
+    color: $fg_text;
+}
+
+QPushButton[role="danger"] {
+    background: $err_soft;
+    color: $err;
+    border: $border_w solid $err;
+    border-radius: $radius_m;
+    padding: $pad_sm $pad_md;
+}
+
+QPushButton#btnValidateRepo[role="accent"] {
+    background: $ok_soft;
+    color: $ok;
+    border: $border_w solid $ok;
+    border-radius: $radius_m;
+    padding: $pad_sm $pad_md;
+    font-weight: 600;
+}
+
+QPushButton#btnValidateRepo[role="danger"] {
+    background: $err_soft;
+    color: $err;
+    border-color: $err;
+}
+
+QFrame#scriptRow {
+    background: $bg_banner;
+    border: $border_w solid $border_banner;
+    border-radius: $radius_m;
+    padding: $pad_sm $pad_sm;
+}
+
+QMessageBox {
+    background: $bg_panel;
+}
+
+QMessageBox QLabel {
+    color: $fg_text;
+    font-size: $fs_md;
+}
+
+QMessageBox QPushButton {
+    background: $bg_banner;
+    color: $fg_text;
+    border: $border_w solid $border;
+    border-radius: $radius_m;
+    padding: $pad_sm $pad_md;
+    min-width: 76px;
+}
+
+QMessageBox QPushButton:default {
+    background: $accent;
+    color: $fg_on_accent;
+    border-color: $accent;
+}
+
+QInputDialog {
+    background: $bg_panel;
+}
+
+QInputDialog QLabel {
+    color: $fg_dim;
+}
+
+/* ---------------- menus, info-bulles, ascenseurs ---------------- */
+
+QMenu {
+    background: $bg_menu;
+    color: $fg_text;
+    border: $border_w solid $border;
+    border-radius: $radius_m;
+    padding: $pad_sm;
+}
+
+QMenu::item {
+    padding: $pad_sm $pad_lg;
+    border-radius: $radius_s;
+}
+
+QMenu::item:selected {
+    background: $bg_selected;
+    color: $fg_title;
+}
+
+QMenu::item:disabled {
+    color: $fg_disabled;
+}
+
+QMenu::separator {
+    height: $border_w;
+    background: $border;
+    margin: $pad_sm $pad_xs;
+}
+
+QToolTip {
+    background: $bg_tooltip;
+    color: $fg_text;
+    border: $border_w solid $border_strong;
+    padding: $pad_sm;
+}
+
+QScrollBar:vertical {
+    background: $bg_scroll_track;
+    width: 11px;
+    margin: 0;
+    border-radius: $radius_s;
+}
+
+QScrollBar::handle:vertical {
+    background: $bg_scroll_handle;
+    border-radius: $radius_s;
+    min-height: 30px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: $border_strong;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical,
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: none;
+    height: 0;
+}
+
+QScrollBar:horizontal {
+    background: $bg_scroll_track;
+    height: 11px;
+    border-radius: $radius_s;
+}
+
+QScrollBar::handle:horizontal {
+    background: $bg_scroll_handle;
+    border-radius: $radius_s;
+    min-width: 30px;
+    margin: 2px;
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal,
+QScrollBar::add-page:horizontal,
+QScrollBar::sub-page:horizontal {
+    background: none;
+    width: 0;
+}
+
+QAbstractItemView {
+    background: $bg_menu;
+    color: $fg_text;
+    border: $border_w solid $border;
+    selection-background-color: $bg_selected;
+    selection-color: $fg_title;
+    outline: none;
+}

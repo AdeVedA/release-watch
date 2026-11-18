@@ -1,0 +1,57 @@
+# --- ruff.toml DU PROJET ---
+# Copie des réglages que j'utilisais dans mon fichier ruff.toml GLOBAL (celui que ruff cherche dans
+# le dossier de configuration de l'utilisateur), car un runner GitHub n'a pas ce dossier.
+# Sans ce fichier dans le depot, la CI verifierait le code avec les
+# regles d'usine de ruff (tri des imports, noms de classes, nids a bugs : rien de tout cela ne serait
+# signale), alors que mon editeur, lui, appliquerait les regles ci-dessous.
+# Resultat : le depot serait vert en ligne et rouge sur mon poste, ou l'inverse.
+
+# Longueur maximale d'UNE ligne de texte dans un fichier .py, en caracteres, indentation comprise.
+# 88 = standard Black ; 120 = ce que j'utilise partout.
+line-length = 120
+indent-width = 4
+
+# Le code utilise la syntaxe Python 3.13 : ruff ne doit pas proposer de vieille ecriture.
+target-version = "py313"
+
+# 2. CONFIGURATION DU LINTER (ce qui est une FAUTE, corrigeable ou non)
+[lint]
+# Quelles règles activer ?
+# E, W : Pycodestyle (erreurs de style basiques)
+# F    : Pyflakes (erreurs logiques : variables inutilisées, imports inutilisés)
+# I    : Isort (Tri des imports)
+# N    : Pep8-naming (Vérifie que les classes sont en PascalCase, fonctions en snake_case)
+# UP   : Pyupgrade (suggère de moderniser le code, comme utiliser f-string au lieu de .format)
+# B    : Flake8-bugbear (Détecte des nids à bugs potentiels)
+select = ["E", "W", "F", "I", "N", "UP", "B"]
+
+# Quelles règles ignorer tout le temps ?
+# E501 (ligne trop longue) -> On laisse faire le formateur, on ne veut pas d'erreur linter pour ça.
+# C'est cette règle-là qui utilise le chiffre line-length = 120 du debut du fichier.
+ignore = ["E501"]
+
+# Le comportement de l'Auto-Fix
+# Ici, on définit ce qui EST corrigible si on force la correction.
+# Mais c'est l'IDE (VS Code...) qui décidera QUAND l'appliquer.
+# On autorise tout par défaut (pour les trucs inoffensifs).
+fixable = ["ALL"]
+
+# MAIS ON INTERDIT FORMELLEMENT LA SUPPRESSION DE CODE
+# F841 : Variable locale assignée mais inutilisée -> ruff peut la signaler, il n'a pas le droit de
+# la supprimer tout seul.
+unfixable = ["F841"]
+
+# 3. CONFIGURATION DU FORMATEUR (la seule partie qui REECRIT le fichier)
+[format]
+# Utiliser des doubles guillemets (standard Python moderne)
+quote-style = "double"
+# Indentation par espaces (jamais de tabulations en Python)
+indent-style = "space"
+# Respecter les virgules finales dans les listes multi-lignes (aide les diffs git)
+skip-magic-trailing-comma = false
+# Formatage des fins de lignes (auto pour s'adapter à l'OS ou "lf" pour forcer Linux)
+line-ending = "auto"
+# Formater aussi les exemples de code DANS les docstrings
+docstring-code-format = true
+# Longueur utilisee pour les bouts de code a l'interieur des docstrings : elle suit la ligne du dessus
+docstring-code-line-length = "dynamic"

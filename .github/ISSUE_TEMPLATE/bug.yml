@@ -1,0 +1,79 @@
+name: "Bug"
+description: "Quelque chose ne se passe pas comme le décrit le README"
+title: "[bug] "
+labels:
+  - "bug"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Indique le numéro affiché dans le **titre de la fenêtre** (`ReleaseWatch 0.1.0 — moniteur de releases GitHub`) : c'est le seul numéro qui corresponde au code que tu as réellement exécuté.
+  - type: input
+    id: version
+    attributes:
+      label: Version, telle qu'écrite dans le titre de la fenêtre
+      placeholder: "ReleaseWatch 0.1.0 — moniteur de releases GitHub"
+    validations:
+      required: true
+  - type: dropdown
+    id: systeme
+    attributes:
+      label: Système
+      options:
+        - "Windows 11"
+        - "Windows 10"
+        - "Linux"
+    validations:
+      required: true
+  - type: input
+    id: provenance
+    attributes:
+      label: "Comment l'application a été lancée"
+      description: "l'exécutable de la page Publications, ou `uv run python main.py`"
+      placeholder: "ReleaseWatch-0.1.0-windows-x64.zip"
+    validations:
+      required: true
+  - type: textarea
+    id: etapes
+    attributes:
+      label: Étapes pour reproduire
+      description: "Le plus petit chemin qui déclenche le problème. Un dépôt GitHub public et réel aide beaucoup."
+      placeholder: |
+        1. Ajouter https://github.com/owner/repo
+        2. Décocher « assets »
+        3. Cliquer Fetch
+    validations:
+      required: true
+  - type: textarea
+    id: ce-qui-arrive
+    attributes:
+      label: Ce qui se passe
+      description: "Texte exact du message de la barre d'état ou du bandeau si il y en a un."
+    validations:
+      required: true
+  - type: textarea
+    id: attendu
+    attributes:
+      label: Ce que j'attendais
+    validations:
+      required: true
+  - type: textarea
+    id: captures
+    attributes:
+      label: Capture d'écran
+      description: "Glisser une image ici. Une capture du bandeau concerné suffit, inutile de capturer tout l'écran."
+  - type: checkboxes
+    id: essais
+    attributes:
+      label: Ce que j'ai déjà vérifié
+      options:
+        - label: "J'ai relancé l'application"
+          required: false
+        - label: "Le problème disparaît si je supprime data/state.json (je l'ai sauvegardé avant)"
+          required: false
+        - label: "Le même dépôt est surveillé par un autre bandeau, qui fonctionne"
+          required: false
+  - type: markdown
+    attributes:
+      value: |
+        Pour un problème de **sécurité**, ne pas ouvrir d'issue : utiliser le signalement privé (voir `SECURITY.md`).

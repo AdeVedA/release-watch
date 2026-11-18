@@ -1,0 +1,194 @@
+# Ligne de construction qui PUBIE. Elle se declenche sur un tag `vX.Y.Z`, jamais sur un simple push.
+#
+# Elle fabrique l'executable Windows, les deux archives source, verifie ce que l'executable embarque
+# vraiment, puis ouvre une publication en BROUILLON. Rien n'est visible du public tant que le
+# brouillon n'a pas ete ouvert et « Publish release » clique.
+name: Publication
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+env:
+  UV_VERSION: "0.13.9"
+  APP_SLUG: ReleaseWatch
+
+jobs:
+  livrable:
+    name: Executable Windows et archives source
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Recuperer le depot (tels les octets du depot)
+        # Epingle au commit exact : un tag peut etre deplace sur un autre commit par l'auteur
+        # sans qu'on le demande. Le numero reste lisible en commentaire.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+
+      # Un input d'une brique tierce peut disparaitre sans bruit : l'etape tournerait quand meme,
+      # avec le uv du jour. Cette ligne transforme une derive silencieuse en echec lisible.
+      - name: Verifier le uv reellement installe
+        shell: bash
+        run: uv --version | grep -F "${{ env.UV_VERSION }}"
+
+      - name: Dependances (exactement ce que dit uv.lock)
+        run: uv sync --frozen
+
+      # Le tag et le numero affiche a l'ecran doivent etre le meme numero : sinon une publication
+      # dit « 0.2.0 » pendant que le bandeau de l'application ecrit « 0.1.0 ».
+      - name: Controler le tag et lire le numero de version
+        id: version
+        shell: bash
+        run: |
+          numero=$(uv run --frozen python -c "import pathlib,tomllib; print(tomllib.load(pathlib.Path('pyproject.toml').open('rb'))['project']['version'])")
+          if [ "v$numero" != "$GITHUB_REF_NAME" ]; then
+            echo "Le tag s'appelle $GITHUB_REF_NAME, mais pyproject.toml annonce $numero."
+            echo "Corriger le numero dans app/about.py et pyproject.toml, ou repousser le bon tag."
+            exit 1
+          fi
+          echo "numero=$numero" >> "$GITHUB_OUTPUT"
+          echo "Le livrable, la publication et le bandeau portent le numero $numero"
+
+      # Les trois controles habituels sont relances ici : une publication ne part pas d'un code
+      # qui n'a pas ete verifie dans le meme environnement que celui du livrable.
+      - name: pytest (interface pilotee hors ecran, aucun appel reseau)
+        run: uv run --frozen pytest
+
+      - name: Audit zero-confiance du code reseau
+        run: uv run --frozen python tools/audit_net.py
+
+      # Sans ce gate, un .exe partirait sans les textes de licence obligatoires.
+      - name: Rassembler les textes de licence du livrable
+        run: uv run --frozen python tools/export_licenses.py
+
+      - name: Refuser un outil de construction non epingle
+        shell: bash
+        run: |
+          if grep -n "REMPLIR" requirements-build.txt; then
+            echo ""
+            echo "requirements-build.txt ne porte pas encore de numero de PyInstaller."
+            echo "Sur le poste de travail : lire le numero, puis le recopier dans ce fichier :"
+            echo '  uv.exe run --python 3.13 --with pyinstaller --no-project python -c "import PyInstaller.__main__ as p; print(p.__version__)"'
+            exit 1
+          fi
+
+      # --onedir (jamais --onefile) : les DLL Qt restent des fichiers separes et remplaçables,
+      # ce que demande la LGPL. --windowed : pas de fenetre de console derriere l'application.
+      # --add-data : les quatre dossiers que le programme lit, et que `paths.py` sait retrouver
+      # quand il est gele. Sans `assets`, l'executable n'a plus d'icone ni de drapeaux de langue.
+      # Pas de --specpath : la recette generee est ecrite a la racine du depot, et PyInstaller
+      # resout les sources de --add-data par rapport au dossier de cette recette. Avec
+      # `--specpath build`, il cherchait `build\resources` et le build echouait. La recette reste
+      # un dechet local : `*.spec` est ignore par git.
+      - name: Construire l'executable Windows
+        run: >-
+          uv run --frozen --with-requirements requirements-build.txt pyinstaller
+          --noconfirm --clean --onedir --windowed
+          --name ${{ env.APP_SLUG }}
+          --icon assets/release_watch.ico
+          --distpath dist --workpath build
+          --add-data "resources;resources"
+          --add-data "assets;assets"
+          --add-data "legal;legal"
+          --add-data "licenses;licenses"
+          main.py
+
+      # Ce controle est la precaution utile, pas une supposition : si un paquet PySide6 GPL ou
+      # ffmpeg entrait dans le livrable, cette etape le dit et la publication s'arrete.
+      - name: Verifier ce que l'executable embarque
+        shell: bash
+        run: |
+          internes="dist/${{ env.APP_SLUG }}/_internal"
+          if [ ! -d "$internes" ]; then
+            echo "Arborescence inattendue : $internes n'existe pas."
+            exit 1
+          fi
+          interdits=$(find "$internes" -type f \( -iname 'Qt6WebEngine*' -o -iname 'Qt6Pdf*' -o -iname 'Qt6Multimedia*' -o -iname 'avcodec*' -o -iname 'avformat*' -o -iname 'avutil*' \))
+          if [ -n "$interdits" ]; then
+            echo "Ces bibliotheques se retrouvent dans le livrable alors que le programme ne les utilise pas :"
+            echo "$interdits"
+            echo "Elles viennent de PySide6-Addons / Pdf / WebEngine (modules GPL, et ffmpeg). Le projet ne doit dependre que de pyside6-essentials."
+            exit 1
+          fi
+          for dossier in "$internes/licenses/legal" "$internes/legal"; do
+            if [ ! -f "$dossier/lgpl-3.0.txt" ]; then
+              echo "Le livrable ne contient pas le texte de licence LGPL-3.0 dans $dossier."
+              exit 1
+            fi
+          done
+          echo "DLL Qt embarquees :"
+          ls -1 "$internes"/Qt6*.dll
+
+      # Une CI ne regarde pas un ecran : elle lit un code de sortie. Ce mode ouvre la fenetre
+      # reelle, laisse la passe de layout se faire, puis s'arrete seul (code 4 si ça a plante).
+      # L'executable est construit sans console (`--windowed`) : il n'a pas de sortie d'erreur et
+      # ne peut donc rien y ecrire. Son diagnostic passe par `data/smoke-test.log`, que cette
+      # etape affiche quand le code de sortie n'est pas zero.
+      - name: Lancer l'executable construit (demarrage reel, sans ecran)
+        shell: bash
+        run: |
+          binaire="dist/${{ env.APP_SLUG }}/${{ env.APP_SLUG }}.exe"
+          journal="dist/${{ env.APP_SLUG }}/data/smoke-test.log"
+          if "$binaire" --smoke-test; then
+            echo "demarrage reel : code 0"
+          else
+            code=$?
+            echo "demarrage reel : code $code"
+            if [ -f "$journal" ]; then
+              echo "--- $journal ---"
+              cat "$journal"
+            else
+              echo "aucun journal ecrit : le plantage est avant l'ecriture (chargeur, DLL manquante)"
+            fi
+            exit "$code"
+          fi
+
+      # `git archive` travaille sur le commit etiquete : c'est pour ça que l'ordre est
+      # commit -> tag -> publication, et jamais l'inverse.
+      - name: Fabriquer les deux archives source
+        run: uv run --frozen python tools/make_source_archives.py --out dist
+
+      - name: Compresser le dossier de l'executable
+        shell: pwsh
+        run: Compress-Archive -Path "dist/${{ env.APP_SLUG }}" -DestinationPath "dist/${{ env.APP_SLUG }}-${{ steps.version.outputs.numero }}-windows-x64.zip" -CompressionLevel Optimal
+
+      # Les trois productions vivent dans `dist/` : l'executable et les archives source au meme
+      # endroit, dans un dossier ignore par git. Le controle et la publication relisent donc le
+      # chemin exact ou les etapes precedentes les ont ecrites (mesure du 2026-11-19 : le controle
+      # cherchait les archives a la racine alors que l'outil les posait dans `dist/`).
+      - name: Controler la presence des trois fichiers a publier
+        shell: bash
+        run: |
+          numero="${{ steps.version.outputs.numero }}"
+          for fichier in "dist/${{ env.APP_SLUG }}-$numero-windows-x64.zip" "dist/${{ env.APP_SLUG }}-$numero-source-windows-x64.zip" "dist/${{ env.APP_SLUG }}-$numero-source-linux-x64.zip"; do
+            if [ ! -f "$fichier" ]; then
+              echo "Il manque $fichier : la publication serait incomplete."
+              exit 1
+            fi
+            ls -l "$fichier"
+          done
+
+      # Brouillon seulement : la derniere decision reste manuelle. `gh` publie le nom de base du
+      # fichier : le dossier d'ou il vient ne change pas le nom affiche dans la publication.
+      - name: Ouvrir la publication en brouillon
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          numero="${{ steps.version.outputs.numero }}"
+          gh release create "$GITHUB_REF_NAME" \
+            --draft \
+            --title "${{ env.APP_SLUG }} $numero" \
+            --generate-notes \
+            "dist/${{ env.APP_SLUG }}-$numero-windows-x64.zip" \
+            "dist/${{ env.APP_SLUG }}-$numero-source-windows-x64.zip" \
+            "dist/${{ env.APP_SLUG }}-$numero-source-linux-x64.zip"

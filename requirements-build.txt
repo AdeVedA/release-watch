@@ -1,0 +1,12 @@
+# Outils de CONSTRUCTION du livrable, pas de fonctionnement de l'application.
+#
+# Ils ne sont volontairement pas dans `pyproject.toml` ni dans `uv sync` : la publication les
+# ajoute a la volee (`uv run --frozen --with-requirements requirements-build.txt ...`), pour que
+# celui qui installe ReleaseWatch ne telecharge jamais un generateur d'executable.
+#
+# Version epinglee exprès : une publication doit pouvoir etre refaite a l'identique six mois plus
+# tard, avec exactement le meme generateur. Le numero se lit sur ton poste :
+#
+#   uv.exe run --python 3.13 --with pyinstaller --no-project python -c "import PyInstaller.__main__ as p; print(p.__version__)"
+#
+pyinstaller==6.22.3

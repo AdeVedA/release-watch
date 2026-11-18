@@ -1,0 +1,116 @@
+# Contrôles de non-régression : lint, types, suite de tests et audit réseau, sur Windows ET Linux.
+#
+# Ce workflow ne publie RIEN : jeton en lecture seule. Il se relance sur chaque push et chaque
+# pull request, et la protection de la branche `main` exige son vert.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Versions épinglées : un outil non épinglé peut faire rougir la CI sans le moindre
+  # changement de ce dépôt. `CONTRIBUTING.md` explique où lire ces numéros.
+  RUFF_VERSION: "0.17.5"
+  TY_VERSION: "0.0.107"
+  UV_VERSION: "0.13.9"
+
+jobs:
+  qualite:
+    name: Lint et types
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Récupérer le dépôt (tels les octets du dépôt)
+        # Epinglé au commit exact : `@v7` suffirait, mais un tag peut être déplacé sur un autre
+        # commit par l'auteur sans qu'on le demande. Le numero reste lisible en commentaire.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+
+      # Un input d'une brique tierce peut disparaître sans bruit : l'étape tournerait quand même,
+      # avec le uv du jour. Cette ligne transforme une dérive silencieuse en échec lisible.
+      - name: Vérifier le uv réellement installé
+        shell: bash
+        run: uv --version | grep -F "${{ env.UV_VERSION }}"
+
+      # ty resout les imports tiers (PySide6, requests, pytest) depuis l'environnement du projet.
+      # Sans `.venv` dans ce job, chacun de ces imports devient une erreur `import-not-found` :
+      # 52 erreurs et un code 1 sans qu'une seule ligne de code ait change. Mesure locale :
+      # `ty check . --python <interprete nu>` reproduit exactement l'echec du serveur.
+      - name: Dépendances (exactement ce que dit uv.lock)
+        run: uv sync --frozen
+
+      - name: ruff (règles)
+        run: uvx ruff@${{ env.RUFF_VERSION }} check .
+
+      - name: ruff (mise en forme)
+        run: uvx ruff@${{ env.RUFF_VERSION }} format --check .
+
+      - name: ty (types)
+        run: uvx ty@${{ env.TY_VERSION }} check .
+
+  tests:
+    name: Tests sur ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      # Sans ça, l'OS qui échoue annule l'autre : on ne verrait jamais pourquoi le second
+      # système pleurait, et c'est justement la raison d'être de la matrice.
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - name: Récupérer le dépôt (tels les octets du dépôt)
+        # Epinglé au commit exact : `@v7` suffirait, mais un tag peut être déplacé sur un autre
+        # commit par l'auteur sans qu'on le demande. Le numero reste lisible en commentaire.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Contrôler les fins de ligne du dépôt
+        shell: bash
+        run: |
+          if git ls-files --eol | grep -q '^i/crlf'; then
+            echo "Le dépôt contient des blobs en CRLF : git archive et les tests ne voient pas les mêmes octets."
+            git ls-files --eol | grep '^i/crlf'
+            exit 1
+          fi
+
+      - name: uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+
+      # Un input d'une brique tierce peut disparaître sans bruit : l'étape tournerait quand même,
+      # avec le uv du jour. Cette ligne transforme une dérive silencieuse en échec lisible.
+      - name: Vérifier le uv réellement installé
+        shell: bash
+        run: uv --version | grep -F "${{ env.UV_VERSION }}"
+
+      - name: Bibliothèques système Qt (Linux, plateforme hors écran)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 libegl1 libxkbcommon0 libxkbcommon-x11-0 libxcb-cursor0 fontconfig
+
+      - name: Dépendances (exactement ce que dit uv.lock)
+        run: uv sync --frozen
+
+      - name: pytest (interface pilotée hors écran, aucun appel réseau)
+        run: uv run --frozen pytest
+
+      - name: Audit zéro-confiance du code réseau
+        run: uv run --frozen python tools/audit_net.py

@@ -1,0 +1,30 @@
+# Fins de ligne à l'checkout (projet développé sur Windows).
+# Les fichiers texte sont normalisés en LF dans le dépôt, puis checkés en CRLF.
+# -> garantit un CRLF stable quel que soit l'outil (git, éditeur, agent).
+
+# Par défaut : tout fichier texte -> CRLF au checkout
+* text=auto eol=crlf
+
+# Fichiers texte du projet (explicites)
+*.py    text eol=crlf
+*.toml  text eol=crlf
+*.md    text eol=crlf
+*.bat   text eol=crlf
+*.ps1   text eol=crlf
+*.lock  text eol=crlf
+*.txt   text eol=crlf
+*.cfg   text eol=crlf
+*.ini   text eol=crlf
+*.json  text eol=crlf
+*.qss   text eol=crlf
+*.csv   text eol=crlf
+
+# Fichiers binaires (jamais convertis)
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.wav   binary
+*.mp3   binary
+*.ogg   binary
