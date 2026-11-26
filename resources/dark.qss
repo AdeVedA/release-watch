@@ -372,6 +372,8 @@ QToolButton#btnExcludeCheckAll {
     padding: $pad_xs $pad_xs;
 }
 
+QPushButton#btnFetch:hover,
+QPushButton#btnOpenGithub:hover,
 QToolButton#btnPickScript:hover,
 QToolButton#btnDragOrder:hover,
 QToolButton#btnMore:hover,
@@ -382,6 +384,20 @@ QToolButton#btnExcludeCheckAll:hover {
     border-color: $border_strong;
 }
 
+/* « Script ⤶ » a deux etats (ghost sans script, accent avec script) : chacun son survol.
+   La regle accent vient APRES la regle ghost, a specificite egale l'ordre de source gagne. */
+QPushButton#btnLaunch:hover {
+    background: $bg_hover;
+    color: $fg_title;
+    border-color: $border_strong;
+}
+
+QPushButton#btnLaunch[role="accent"]:hover {
+    background: $accent_hover;
+    color: $fg_on_accent;
+    border-color: $accent_hover;
+}
+
 QToolButton#btnDragOrder {
     font-weight: 700;
 }
@@ -389,11 +405,6 @@ QToolButton#btnDragOrder {
 /* ⊘ enfonce quand le repo est exclu du controle global : l'etat se voit sans libelle. */
 QToolButton#btnExcludeCheckAll:checked {
     background: $err_soft;
-    color: $err;
-    border-color: $err;
-}
-
-QToolButton#btnMore[role="danger"]:hover {
     color: $err;
     border-color: $err;
 }
@@ -534,6 +545,12 @@ QFrame#releaseRow {
     min-height: $row_h_release;
     padding: $pad_xs $pad_xs;
     margin-left: $pad_sm;
+}
+
+/* La ligne est cliquable : elle se signale au survol. Placee AVANT `:focus` (specificite
+   egale), une ligne a la fois survolée et au garde a la main reste marquee au focus. */
+QFrame#releaseRow:hover {
+    background: $bg_hover;
 }
 
 /* La ligne cliquee prend le focus : c'est elle qui recoit les fleches haut/bas. */
@@ -967,17 +984,11 @@ QLineEdit {
     selection-background-color: $bg_selection;
 }
 
-QSpinBox {
-    background: $bg_input;
-    color: $fg_text;
-    border: $border_w solid $border;
-    border-radius: $radius_s;
-    padding: $pad_sm $pad_sm;
-}
-
 /* Regle de classe et non par `#id` : un combo sans regle rend le fond natif, donc blanc, et le
    nombre choisi devient illegible. Les combos du bandeau ont deja leurs regles `#id` plus
-   specifiques (largeurs), celles-ci ne servent que de plancher pour tout combo nouveau. */
+   specifiques (largeurs), celles-ci ne servent que de plancher pour tout combo nouveau.
+   Aucun regle `QSpinBox` : plus aucun spinbox dans l'application, les reglages de versions sont
+   des combos a crans fixes. */
 QComboBox {
     background: $bg_input;
     color: $fg_text;
@@ -1015,14 +1026,6 @@ QPushButton[role="ghost"]:hover {
     color: $fg_text;
 }
 
-QPushButton[role="danger"] {
-    background: $err_soft;
-    color: $err;
-    border: $border_w solid $err;
-    border-radius: $radius_m;
-    padding: $pad_sm $pad_md;
-}
-
 QPushButton#btnValidateRepo[role="accent"] {
     background: $ok_soft;
     color: $ok;
@@ -1032,10 +1035,23 @@ QPushButton#btnValidateRepo[role="accent"] {
     font-weight: 600;
 }
 
-QPushButton#btnValidateRepo[role="danger"] {
-    background: $err_soft;
-    color: $err;
-    border-color: $err;
+/* Survol de « Verifier l'URL » : la regle d'etat ne peignait aucune reactivite. Pas de token
+   `ok_hover` dans la palette : le fond passe directement au vert plein, texte sombre. */
+QPushButton#btnValidateRepo[role="accent"]:hover {
+    background: $ok;
+    color: $fg_on_accent;
+    border-color: $ok;
+}
+
+/* Boutons desactivés du dialogue d'ajout : « Ajouter » tant que l'URL n'est pas valide,
+   « Vérifier l'URL » pendant la vérification. La regle globale `QPushButton:disabled` est
+   ecrasee par les regles `#id` plus loin : sans ce bloc, un bouton desactive garde sa couleur
+   d'actif (le piege deja traité pour les boites du bandeau plus haut). */
+QPushButton#btnOk:disabled,
+QPushButton#btnValidateRepo[role="accent"]:disabled {
+    background: $bg_disabled;
+    color: $fg_disabled;
+    border-color: $border;
 }
 
 QFrame#scriptRow {
@@ -1043,6 +1059,26 @@ QFrame#scriptRow {
     border: $border_w solid $border_banner;
     border-radius: $radius_m;
     padding: $pad_sm $pad_sm;
+}
+
+QToolButton#btnBrowseScript,
+QToolButton#btnBrowseCwd,
+QToolButton#btnRemoveScript {
+    background: $bg_banner;
+    color: $fg_text;
+    border: $border_w solid $border;
+    border-radius: $radius_m;
+    padding: 2px 3px;
+    margin: 1px 9px 1px 1px;
+}
+
+QToolButton#btnBrowseScript:hover,
+QToolButton#btnBrowseCwd:hover {
+    background: $bg_hover;
+}
+
+QToolButton#btnRemoveScript:hover {
+    background: $err_soft;
 }
 
 QMessageBox {
@@ -1069,13 +1105,29 @@ QMessageBox QPushButton:default {
     border-color: $accent;
 }
 
-QInputDialog {
-    background: $bg_panel;
+/* Survol et enfonce de ces boutons poses a la main (« Conserver / Supprimer », « Annuler ») :
+   aucun etat natif ne les habille. Ordre : hover, puis hover du bouton par defaut (il doit
+   garder l'accent, a specificite egale l'ordre de source gagne), puis pressed. */
+QMessageBox QPushButton:hover {
+    background: $bg_hover;
+    color: $fg_text;
+    border-color: $border_strong;
 }
 
-QInputDialog QLabel {
-    color: $fg_dim;
+QMessageBox QPushButton:default:hover {
+    background: $accent_hover;
+    color: $fg_on_accent;
+    border-color: $accent_hover;
 }
+
+QMessageBox QPushButton:pressed {
+    background: $bg_selected;
+    color: $fg_title;
+    border-color: $border_strong;
+}
+
+/* Aucun regle `QInputDialog` : le dialogue de saisie est maison (app/widgets/input_dialog.py),
+   c'est un `QDialog` couvert par la regle du debut de fichier. */
 
 /* ---------------- menus, info-bulles, ascenseurs ---------------- */
 

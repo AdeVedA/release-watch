@@ -518,6 +518,8 @@ class RepoBanner(QFrame):
         # la passe de layout qui déclenche l'événement : Qt le paierait en crash.
         QTimer.singleShot(0, self._apply_columns_layout)
         QTimer.singleShot(0, self._fit_title_font)
+        # Les lignes ont glissé sous le curseur : l'état survol ne se recalcule pas tout seul.
+        QTimer.singleShot(0, self.clear_rows_hover)
 
     def _sync_filter_columns(self) -> None:
         """Aligne les boîtes « à garder » / « sauf » des deux lignes de réglages.
@@ -686,6 +688,22 @@ class RepoBanner(QFrame):
 
     def column_bodies(self) -> dict[str, QWidget]:
         return dict(self._col_body)
+
+    def clear_rows_hover(self) -> None:
+        """Efface l'etat survol pose par `QFrame#releaseRow:hover` sur les lignes qui ne le portent plus.
+
+        Qt ne recalcule pas `underMouse` quand un widget glisse sous un curseur immobile : apres un
+        redimensionnement, une largeur de panneau notes appliquee en differe ou un re-layout du
+        demarrage, une ligne de version peut passer sous la souris sans deplacement de souris, se
+        peindre en survol, et ne jamais recevoir le Leave qui la repeindrait au repos. Sans ce
+        nettoyage, le fond reste peint jusqu'au prochain re-polish de la ligne.
+        """
+        for rows in self.rows_by_side().values():
+            for row in rows:
+                if not row.underMouse():
+                    continue
+                row.setAttribute(Qt.WidgetAttribute.WA_UnderMouse, False)
+                row.update()
 
     def column_toggles(self) -> dict[str, QToolButton]:
         """Boutons de repli : ils vivent dans la ligne de filtres, plus au-dessus des colonnes."""
@@ -1064,6 +1082,9 @@ class RepoBanner(QFrame):
             meta_width = min(meta_cap, max(meta for _version, meta in natural) + 8)
             for row in rows:
                 row.set_text_widths(version_width, meta_width)
+        # Les largeurs de texte viennent de changer : une ligne a pu glisser sous un curseur
+        # immobile, et Qt ne lui enverra jamais le Leave qui effacerait son fond de survol.
+        self.clear_rows_hover()
 
     def _sync_column_toggles(self) -> None:
         """Bascule et détail de chaque colonne : tout tient dans l'infobulle du bouton."""
@@ -1285,8 +1306,8 @@ class RepoBanner(QFrame):
             lambda: self.download_dir_requested.emit(self._repo.id),
         )
         menu.addSeparator()
+        # Pas de role `danger` ici : le QSS ne cible pas les `QAction`, seuls les widgets le peuvent.
         remove = menu.addAction(t("Supprimer ce repo"))
-        remove.setProperty("role", "danger")
         remove.triggered.connect(lambda: self.remove_requested.emit(self._repo.id))
         menu.exec(self.btn_more.mapToGlobal(self.btn_more.rect().bottomLeft()))
 
@@ -1518,13 +1539,11 @@ class RepoBanner(QFrame):
         self._sync_asset_tooltip()
         self.message.emit(t("Asset par défaut : {name}").format(name=text), Status.UNKNOWN)
 
-    def _on_launch(self) -> None:
-        scripts = self._repo.scripts
-        if not scripts:
-            return
-        if len(scripts) == 1:
-            self.script_requested.emit(self._repo.id, 0)
-            return
+    def _build_scripts_menu(self) -> QMenu:
+        """Une entree par script, dans l'ordre enregistre, numerotee meme s'il n'y en a qu'un.
+
+        Une entree refusee au lancement reste visible mais desactivee, avec le motif du refus.
+        """
         menu = QMenu(self)
         menu.setToolTipsVisible(True)
         for index, script in enumerate(self._repo.scripts):
@@ -1539,7 +1558,17 @@ class RepoBanner(QFrame):
             action.setToolTip(
                 t("Lancé depuis : {cwd}\nCommande : {command}").format(cwd=plan.cwd, command=" ".join(plan.command))
             )
-        picked = menu.exec(self.btn_launch.mapToGlobal(self.btn_launch.rect().bottomLeft()))
+        return menu
+
+    def _on_launch(self) -> None:
+        """Le menu s'ouvre toujours, meme avec un seul script : un clic ne lance jamais rien direct.
+
+        Le cas « un seul script = lancement immediat » etait un raccourci dangereux : le script
+        partait dans sa console sans que personne ait relu son dossier et sa commande.
+        """
+        if not self._repo.scripts:
+            return
+        picked = self._build_scripts_menu().exec(self.btn_launch.mapToGlobal(self.btn_launch.rect().bottomLeft()))
         if picked is None:
             return
         self.script_requested.emit(self._repo.id, int(picked.data()))
