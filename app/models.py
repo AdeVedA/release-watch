@@ -23,7 +23,6 @@ MAX_VERSIONS_CHOICES: tuple[int, ...] = (5, 10, 15, 20, 25)
 MAX_REJECTED_VERSIONS_CHOICES: tuple[int, ...] = (5, 10, 15, 20, 25)
 DEFAULT_MAX_VERSIONS: Final[int] = 5
 DEFAULT_MAX_REJECTED_VERSIONS: Final[int] = 25
-MAX_OTHER_TAGS: Final[int] = MAX_RELEASES
 TAG_PATTERN_EXAMPLE: Final[str] = "v0.2.*"
 DEFAULT_NOTES_FONT_SIZE: Final[int] = 13
 DEFAULT_WINDOW_WIDTH: Final[int] = 1180
@@ -630,7 +629,9 @@ class Repo:
         families: dict[str, list[str]] = {}
         for name in names:
             families.setdefault(tag_family(name)[0], []).append(name)
-        window = max(1, self.max_versions + self.max_rejected_versions)
+        # La fenêtre de datation couvre la base entière (le maximum des deux colonnes), jamais le
+        # réglage affiché : une date payée sous un réglage bas serait re-payée quand il remonte.
+        window = MAX_VISIBLE_VERSIONS
         prefix_groups: list[tuple[str, list[str]]] = []
 
         def rank(names: list[str]) -> list[str]:
@@ -696,17 +697,17 @@ class Repo:
         return plan
 
     def storage_cap(self) -> int:
-        """Lignes gardées en base : de quoi remplir les deux colonnes, plafonné à `MAX_VISIBLE_VERSIONS`.
+        """Lignes gardées en base : le maximum que les deux colonnes peuvent réclamer.
 
-        Les colonnes sont bornées chacune par son propre réglage (`max_versions` à gauche,
-        `max_rejected_versions` à droite) : un cap de stockage plus bas tronque silencieusement
-        la colonne rejetée, réglage affiché à l'écran non respecté.
+        La base est dimensionnée au plafond des réglages (`MAX_VISIBLE_VERSIONS`), jamais au réglage
+        affiché : remonter un réglage après l'avoir baissé doit remplir les deux colonnes sans re-fetch.
+        Un cap suivi du réglage affichait le symptôme inverse — passer de 25 à 10 à droite écrasait les
+        lignes en trop à l'enregistrement, et les 15 lignes manquantes ne revenaient qu'avec un fetch.
+        Les réglages ne font que rogner à l'affichage (`matching_releases`, `rejected_releases`).
         """
-        kept = snap_versions_choice(self.max_versions)
-        rejected = snap_versions_choice(self.max_rejected_versions)
-        return min(MAX_VISIBLE_VERSIONS, kept + rejected)
+        return MAX_VISIBLE_VERSIONS
 
-    def pick_candidates(self, candidates: Sequence[ReleaseInfo], cap: int = MAX_RELEASES) -> list[ReleaseInfo]:
+    def pick_candidates(self, candidates: Sequence[ReleaseInfo], cap: int = MAX_VISIBLE_VERSIONS) -> list[ReleaseInfo]:
         """Les lignes gardées en base, chronologiques, en incluant les tags déjà recensés.
 
         Le cap est une limite de stockage, pas un filtre : la priorité reste donnée à ce qui passe
@@ -741,14 +742,19 @@ class Repo:
 
     @property
     def stale_releases(self) -> list[ReleaseInfo]:
-        """Tags autorisés mais au-delà du cap affiché : trop anciens, colonne de droite."""
-        return self.allowed_releases[self.max_versions : MAX_OTHER_TAGS]
+        """Tags autorisés mais au-delà du réglage retenu : trop anciens, colonne de droite.
+
+        La découpe suit son propre réglage (`max_rejected_versions`), jamais un plafond global :
+        bornée à une constante, elle rendait la colonne de droite vide dès que la colonne retenue
+        atteignait ce plafond, réglage affiché à l'écran non respecté.
+        """
+        return self.allowed_releases[self.max_versions : self.max_versions + self.max_rejected_versions]
 
     @property
     def other_releases(self) -> list[ReleaseInfo]:
         """Tags refusés par le motif ou l'exclusion : affichés à droite, jamais comparés."""
         refused = [release for release in self.releases if not self.tag_is_allowed(release.tag)]
-        return self._by_date(refused)[:MAX_OTHER_TAGS]
+        return self._by_date(refused)[: self.max_rejected_versions]
 
     @property
     def rejected_candidates(self) -> list[ReleaseInfo]:

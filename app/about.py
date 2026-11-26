@@ -19,7 +19,7 @@ APP_NAME = "ReleaseWatch"
 APP_ID_WINDOWS = "adeveda.releasewatch"
 # Version affichée à l'écran : sans elle, un rapport de bug ne dit pas quel code a été exécuté.
 # La suite de tests la compare à la version de `pyproject.toml` : plus de divergence silencieuse.
-APP_VERSION: str = "0.2.0"
+APP_VERSION: str = "0.3.0"
 
 ASSETS: Path = assets_dir()
 ICON_PATH = ASSETS / "release_watch.png"

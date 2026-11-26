@@ -43,7 +43,6 @@ from app.models import (
     MAX_MATCHING_PREFIXES_PER_PASS,
     MAX_NOTES_DOCK_WIDTH,
     MAX_REQUESTS_PER_PASS,
-    MAX_VISIBLE_VERSIONS,
     MIN_NOTES_DOCK_WIDTH,
     MIN_WINDOW_HEIGHT,
     MIN_WINDOW_WIDTH,
@@ -494,10 +493,7 @@ class MainWindow(QMainWindow):
         fallback = [repo_id for repo_id in matching if plans[repo_id].queued == 0 and self._pass_shares[repo_id][1] > 0]
         if fallback and left > 0:
             by_id = {repo.id: repo for repo in targets}
-            limits = {
-                repo_id: min(MAX_VISIBLE_VERSIONS, by_id[repo_id].max_versions + by_id[repo_id].max_rejected_versions)
-                for repo_id in fallback
-            }
+            limits = {repo_id: by_id[repo_id].storage_cap() for repo_id in fallback}
             progressed = True
             while left > 0 and progressed:
                 progressed = False
@@ -536,9 +532,10 @@ class MainWindow(QMainWindow):
         if repo_id in self._running:
             self._say(t("{title} : fetch déjà en cours").format(title=repo.title), Status.UNKNOWN)
             return
-        # Le motif de tag ne filtre qu'après récupération : on demande plus large pour
-        # obtenir quand même les tags comparés à gauche et les tags rejetés à droite.
-        wanted = min(MAX_VISIBLE_VERSIONS, 3 * (repo.max_versions + repo.max_rejected_versions))
+        # Le motif de tag ne filtre qu'après récupération : on demande le maximum que les deux
+        # colonnes peuvent réclamer (`storage_cap` côté modèle), jamais le réglage affiché. Baisser
+        # un réglage ne doit pas faire perdre de lignes, et les remonter ne doit pas exiger un re-fetch.
+        wanted = repo.storage_cap()
         plan = repo.dating_plan()
         listing, matching, dating = self._fetch_shares(repo_id)
         job = FetchJob(
@@ -560,7 +557,7 @@ class MainWindow(QMainWindow):
             tag_index=repo.tag_index,
             tag_dates=repo.tag_dates,
             tag_prefixes=repo.tags_prefixes,
-            dating_window=repo.max_versions + repo.max_rejected_versions,
+            dating_window=repo.storage_cap(),
         )
         job.signals.finished.connect(self._on_fetched)
         job.signals.failed.connect(self._on_fetch_failed)

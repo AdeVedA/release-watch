@@ -17,6 +17,7 @@ import pytest
 from app.models import (
     MAX_NOTES_DOCK_WIDTH,
     MAX_RELEASES,
+    MAX_VISIBLE_VERSIONS,
     MIN_NOTES_DOCK_WIDTH,
     MIN_WINDOW_WIDTH,
     AppState,
@@ -98,8 +99,12 @@ def test_ecriture_atomique_et_sauvegarde(tmp_path: Path) -> None:
     assert Path(str(store.path) + ".bak").is_file(), "une sauvegarde doit preceder l'ecrasement"
 
 
-def test_le_cap_d_ecriture_suit_les_deux_colonnes(tmp_path: Path) -> None:
-    """La troncature a la licence est le cap des deux colonnes, plus un cap dur unique."""
+def test_baisser_un_reglage_ne_detruit_aucune_ligne(tmp_path: Path) -> None:
+    """La troncature suit le plafond des deux colonnes, jamais le reglage affiche.
+
+    Le reglage ne fait que rogner a l'affichage : l'ecrire ne doit pas jeter les lignes en trop,
+    sinon remonter le reglage exige un re-fetch alors que les donnees etaient deja payees.
+    """
     store = store_in(tmp_path)
     gros = Repo(
         id="gros/repo",
@@ -107,12 +112,17 @@ def test_le_cap_d_ecriture_suit_les_deux_colonnes(tmp_path: Path) -> None:
         name="repo",
         url="https://github.com/gros/repo",
         title="Gros",
-        max_versions=5,
+        max_versions=25,
         max_rejected_versions=25,
-        releases=[ReleaseInfo(tag=f"v{i}.0") for i in range(MAX_RELEASES + 12)],
+        releases=[ReleaseInfo(tag=f"v{i}.0") for i in range(MAX_VISIBLE_VERSIONS + 12)],
     )
     store.save(AppState(settings=Settings(), repos=[gros]))
-    assert len(store.load().repos[0].releases) == gros.storage_cap() == MAX_RELEASES + 5
+    assert len(store.load().repos[0].releases) == gros.storage_cap() == MAX_VISIBLE_VERSIONS
+
+    relu = store.load().repos[0]
+    relu.max_versions, relu.max_rejected_versions = 5, 5
+    store.save(AppState(settings=Settings(), repos=[relu]))
+    assert len(store.load().repos[0].releases) == MAX_VISIBLE_VERSIONS, "baisser un reglage a jete des lignes"
 
 
 def test_la_largeur_du_dock_notes_est_cadree() -> None:

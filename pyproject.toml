@@ -1,6 +1,6 @@
 [project]
 name = "release-watch"
-version = "0.2.0"
+version = "0.3.0"
 description = "Interface graphique locale qui surveille les releases des dépôts GitHub choisis : bandeaux par dépôt, deux colonnes de versions, filtres de tags et d'assets, version locale désignée à la main."
 readme = "readme.md"
 license = "MIT"

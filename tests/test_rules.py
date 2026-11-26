@@ -20,8 +20,6 @@ from app.models import (
     KIND_PLAIN,
     KIND_STALE,
     MAX_DOWNLOADS,
-    MAX_OTHER_TAGS,
-    MAX_RELEASES,
     MAX_VISIBLE_VERSIONS,
     Asset,
     ReleaseInfo,
@@ -108,19 +106,31 @@ def test_motif_de_tag_pilote_statut_et_colonnes() -> None:
 
 
 def test_colonne_droite_bornee_par_le_choix_rejetees() -> None:
+    autorises = [ReleaseInfo(tag=f"v1.{n}.0", published_at=f"2026-01-{n + 10:02d}T00:00:00+00:00") for n in range(8)]
+    hors_motif = [ReleaseInfo(tag=f"2.{n}.0", published_at=f"2020-01-{n + 10:02d}T00:00:00+00:00") for n in range(4)]
     probe = repo_sonde(
         max_versions=1,
         max_rejected_versions=2,
-        releases=[ReleaseInfo(tag=f"v1.{n}.0") for n in range(8)],
+        tag_pattern="v1.*",
+        releases=[*autorises, *hors_motif],
     )
     assert [item.tag for item in probe.matching_releases] == ["v1.7.0"]
     assert [item.tag for item in probe.rejected_releases] == ["v1.6.0", "v1.5.0"]
+    # Obsoletes et hors motif concourent, puis la colonne se tronque sur son propre reglage.
+    assert len(probe.rejected_candidates) == 2 * probe.max_rejected_versions
     assert len(probe.rejected_candidates) > len(probe.rejected_releases)
 
 
 def test_colonnes_jamais_plus_grosses_que_le_cap() -> None:
-    probe = repo_sonde(releases=[ReleaseInfo(tag=f"v{i}.0") for i in range(MAX_RELEASES + 10)])
-    assert len(probe.matching_releases) + len(probe.rejected_releases) <= MAX_OTHER_TAGS + probe.max_versions
+    """Les deux colonnes additionnees ne depassent jamais ce que la base est censee garder."""
+    probe = repo_sonde(
+        max_versions=25,
+        max_rejected_versions=15,
+        releases=[ReleaseInfo(tag=f"v{i}.0") for i in range(MAX_VISIBLE_VERSIONS + 10)],
+    )
+    assert len(probe.matching_releases) == 25, "la colonne retenue doit atteindre son reglage"
+    assert len(probe.rejected_releases) == 15, "la colonne rejetee doit atteindre son reglage"
+    assert len(probe.matching_releases) + len(probe.rejected_releases) <= probe.storage_cap()
 
 
 def test_valeur_hors_cran_retombe_sur_le_cran_le_plus_proche() -> None:
@@ -132,10 +142,9 @@ def test_valeur_hors_cran_retombe_sur_le_cran_le_plus_proche() -> None:
     assert Settings.from_dict({"max_versions": 12}).max_versions == 10
 
 
-def test_cap_de_stockage_suit_les_deux_colonnes() -> None:
-    """Les lignes gardees en base doivent pouvoir remplir les deux colonnes, pas 25 au total."""
-    assert repo_sonde(max_versions=5, max_rejected_versions=5).storage_cap() == 10
-    assert repo_sonde(max_versions=15, max_rejected_versions=15).storage_cap() == 30
+def test_cap_de_stockage_est_le_maximum_des_deux_colonnes() -> None:
+    """La base ne suit pas le reglage affiche : le remonter ne doit jamais exiger un re-fetch."""
+    assert repo_sonde(max_versions=5, max_rejected_versions=5).storage_cap() == MAX_VISIBLE_VERSIONS
     assert repo_sonde(max_versions=25, max_rejected_versions=25).storage_cap() == MAX_VISIBLE_VERSIONS
 
 
@@ -145,6 +154,18 @@ def test_selection_stockee_remplit_les_deux_colonnes() -> None:
     sonde.releases = sonde.pick_candidates(candidates, cap=sonde.storage_cap())
     assert len(sonde.matching_releases) == 5, "la colonne retenue doit atteindre son reglage"
     assert len(sonde.rejected_releases) == 5, "la colonne rejetee doit atteindre son reglage"
+
+
+def test_reglages_25_et_15_remplissent_chaque_colonne() -> None:
+    """Chaque colonne affiche son propre reglage, pas une somme plafonnee a 25."""
+    sonde = repo_sonde(max_versions=25, max_rejected_versions=15)
+    candidates = [ReleaseInfo(tag=f"v{n}.0") for n in range(60, 0, -1)]
+    sonde.releases = sonde.pick_candidates(candidates, cap=sonde.storage_cap())
+    gauche = [item.tag for item in sonde.matching_releases]
+    droite = [item.tag for item in sonde.rejected_releases]
+    assert len(gauche) == 25, "la colonne retenue doit atteindre son reglage"
+    assert len(droite) == 15, "la colonne rejetee doit atteindre son reglage"
+    assert gauche[-1] == "v36.0" and droite[0] == "v35.0", "la colonne de droite ne doit sauter aucune version"
 
 
 def test_filtre_des_assets_en_base() -> None:
