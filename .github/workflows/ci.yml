@@ -19,9 +19,9 @@ concurrency:
 env:
   # Versions épinglées : un outil non épinglé peut faire rougir la CI sans le moindre
   # changement de ce dépôt. `CONTRIBUTING.md` explique où lire ces numéros.
-  RUFF_VERSION: "0.17.5"
-  TY_VERSION: "0.0.107"
-  UV_VERSION: "0.13.9"
+  RUFF_VERSION: "0.17.6"
+  TY_VERSION: "0.0.111"
+  UV_VERSION: "0.13.10"
 
 jobs:
   qualite:

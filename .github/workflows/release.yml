@@ -14,7 +14,7 @@ permissions:
   contents: write
 
 env:
-  UV_VERSION: "0.13.9"
+  UV_VERSION: "0.13.10"
   APP_SLUG: ReleaseWatch
 
 jobs:
